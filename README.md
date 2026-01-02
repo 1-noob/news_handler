@@ -1,2 +1,4 @@
 # news_handler
-tracking relevant news
+Tracking relevant news
+
+# Version 3.0.1
