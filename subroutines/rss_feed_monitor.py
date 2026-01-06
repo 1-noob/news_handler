@@ -22,13 +22,14 @@ class FeedWatcher:
         """
 
         news_feed = feedparser.parse(self.webpage)
-        index = 0
 
         # displaying news titles.
         for news in news_feed.entries:
-            print(str(index)+". "+news.title+"\n")
-            print(news.link)
-            index += 1
+            # Storing the articles inside a file.
+            article_name = news.title
+            article_url = news.link
+
+            
 
 
 
