@@ -16,23 +16,29 @@ class BackupManager:
     
     def _load(self):
         """
-        Load JSON safely. Returns list.
+        Load JSON safely. Returns dict.
         """
         try:
             if not os.path.exists(self.backup_file):
-                return []
+                return {}
             
             with open(self.backup_file, "r", encoding="utf-8") as f:
                 json_data = json.load(f)
-                return json_data if isinstance(json_data, list) else []
+                return json_data if isinstance(json_data, dict) else {}
         
         except json.JSONDecodeError:
-            return []
+            return {}
 
         except (OSError, IOError) as e:
             raise RuntimeError(
                 f"Failed to read JSON file: {self.backup_file}"
             ) from e
+    
+    def flush(self):
+        """
+        Persist current data to disk.
+        """
+        self._save()
 
     
     def add(self, title, link, category, status, stars):
@@ -41,15 +47,12 @@ class BackupManager:
         Append article and persist safely.
         """
         try:
-            self.data.append({
+            self.data[link] = {
                 "Article Title":title,
-                "Article Url":link,
                 "Category":category,
                 "Status":status,
                 "Rating":stars
-            })
-
-            self._save()
+            }
         
         except (OSError, IOError) as e:
             raise RuntimeError("Failed to write article to JSON store") from e
