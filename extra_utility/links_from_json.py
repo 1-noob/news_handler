@@ -6,7 +6,6 @@ from subroutines.backup_manager import BackupManager
 
 def migrate_json_to_backup():
     
-    destination_path = CONFIG.backup
     source_path = r"C:\Users\Shiv\news-db-backup\article_backup.json"
 
     if not os.path.exists(source_path):
@@ -21,27 +20,29 @@ def migrate_json_to_backup():
     
     backupman = BackupManager()
 
-    # Support both dict ad list inputs
-    if isinstance(source_data, dict):
-        articles = source_data.values()
-    elif isinstance(source_data, list):
-        article = source_data
-    else:
-        raise ValueError("Unsupported JSON structure")
+    articles = source_data.values()
 
-    for _,article in source_data.items():
+    count = 0
+
+    for article in articles:
         name = article.get("Name", "").strip()
         url = article.get("URL", "").strip()
         category = article.get("Type", "").strip()
 
-        # Defaults
-        status = 0
-        rating = 1
-
+        if not url:
+            continue  # Skip entries without URL
+            
         # Use BackupManager class
         backupman.add(
-            name, url, category, status, rating
+            name, url, category, CONFIG.STATUS_DEFAULT, CONFIG.RATING_DEFAULT
         )
+        count += 1
+
+        if count % CONFIG.BATCH_SIZE == 0:
+            backupman.flush()
+
+    # Final flush
+    backupman.flush() 
 
 if __name__=="__main__":
     migrate_json_to_backup()
