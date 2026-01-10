@@ -6,6 +6,10 @@ from subroutines.backup_manager import BackupManager
 
 
 def sync_backup_to_new():
+    """
+    Sync articles from old backup JSON to new backup JSON, avoiding duplicates.
+    """
+    
     source_path = r"C:\Users\Shiv\news-db-backup\article_backup.json"  # old backup
     new_path = CONFIG.backup  # current backup json
 
