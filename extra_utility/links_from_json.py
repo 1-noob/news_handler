@@ -4,6 +4,10 @@ import json
 import config as CONFIG
 from subroutines.backup_manager import BackupManager
 
+"""
+In case the new backup is to be repopulated from old backup, use this for one shot migration.
+"""
+
 def migrate_json_to_backup():
     
     source_path = r"C:\Users\Shiv\news-db-backup\article_backup.json"
