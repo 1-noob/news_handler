@@ -5,7 +5,7 @@ class KnowledgeNuggetRule(ClassificationRule):
     category = "Knowledge nugget"
 
     _pattern = re.compile(
-        r"Knowledge\s+Nugget",
+        r"^Knowledge\s+Nugget\b",
         re.IGNORECASE
     )
 
