@@ -5,7 +5,7 @@ class WorldThisWeekRule(ClassificationRule):
     category = "World this week"
 
     _pattern = re.compile(
-        r"World\s+This\s+Week",
+        r"^(?:The\s+)?World\s+This\s+Week\b",
         re.IGNORECASE
     )
 

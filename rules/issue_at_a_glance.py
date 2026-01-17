@@ -5,7 +5,7 @@ class IssueAtAGlanceRule(ClassificationRule):
     category = "Upsc issue at a glance"
 
     _pattern = re.compile(
-        r"UPSC\s+Issue\s+at\s+a\s+Glance",
+        r"^UPSC\s+Issue\s+at\s+a\s+Glance\b",
         re.IGNORECASE
     )
 

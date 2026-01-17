@@ -5,7 +5,7 @@ class MainsAnswerWritingRule(ClassificationRule):
     category = "Mains Answer Writing"
 
     _pattern = re.compile(
-        r"(Mains\s+Answer\s+Writing|Answer\s+Writing\s+Practice)",
+        r"\bMains\s+Answer\s+(Practice|Writing)\b",
         re.IGNORECASE
     )
 
