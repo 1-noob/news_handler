@@ -5,7 +5,7 @@ class CurrentAffairsRule(ClassificationRule):
     category = "Current Affairs"
 
     _pattern = re.compile(
-        r"Current\s+Affairs",
+        r"^UPSC\s+Current\s+Affairs\s+Pointers\b",
         re.IGNORECASE
     )
 
