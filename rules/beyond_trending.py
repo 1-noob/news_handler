@@ -5,7 +5,7 @@ class BeyondTrendingRule(ClassificationRule):
     category = "Beyond trending"
 
     _pattern = re.compile(
-        r"Beyond\s+Trending",
+        r"^Beyond\s+Trending\b",
         re.IGNORECASE
     )
 
