@@ -5,7 +5,7 @@ class ArtAndCultureRule(ClassificationRule):
     category = "Art & Culture"
 
     _pattern = re.compile(
-        r"Art\s*&\s*Culture",
+        r"^(Art\s+and\s+Culture\s+with\s+Devdutt\s+Pattanaik|Devdutt\s+Pattanaik)\b",
         re.IGNORECASE
     )
 
