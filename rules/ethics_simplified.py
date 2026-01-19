@@ -5,7 +5,7 @@ class EthicsSimplifiedRule(ClassificationRule):
     category = "Ethics simplified"
 
     _pattern = re.compile(
-        r"Ethics\s+Simplified",
+        r"\bUPSC\s+Ethics\s+Simplified\b",
         re.IGNORECASE
     )
 
