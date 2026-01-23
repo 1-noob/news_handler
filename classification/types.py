@@ -4,10 +4,11 @@ from typing import Optional
 
 # define status for classification of title
 class ClassifficationStatus(Enum):
-    SUCCESS = "success"
-    SKIPPED = "skipped"
-    UNCLASSIFIED = "unclassified"
-    AMBIGUOUS = "ambiguous"
+    CLASSIFIED = "classified"
+    REVIEW_REQUIRED = "review_required"
+    
+    
+    
 
 
 
