@@ -3,35 +3,44 @@ from typing import List, Sequence
 from classification.types import ClassificationResult, ClassificationStatus
 
 
-class Classifier:
-    """Coordinates classification rules and resolves final classification."""
+class ArticleClassifier:
+    """Rule-based article classifier.
+           1. Apply skip rules.
+           2. Apply classification rules.
+           3. Resolve final status."""
 
-    def __init__(self, rules: Sequence):
-        self._rules = rules
-        
+    def __init__(self, skip_rule, classification_rules):
+        self._skip_rule = skip_rule
+        self._classification_rules = classification_rules
 
     def classify(self, raw_title: str) -> ClassificationResult:
-        """
-        Rule engine.
-        Applies classification rules and resolves conflicts.
-        Decides a category.
-        """
-        matched_rules = []
+        
+        # Skip rules
+        for rule in self._skip_rule:
+            if rule.matches(raw_title):
+                return ClassificationResult(
+                    status=ClassificationStatus.SKIPPED,
+                    raw_title=raw_title,
+                    category=None,
+                )
+        
+        # Classification rules
+        matches = [
+            r for r in self._classification_rules if r.matches(raw_title)
+            ]
 
-        for rule in self._rules:
-            if rule.match(raw_title):
-                matched_rules.append(rule)
-
-        if len(matched_rules) == 1:
-            rule = matched_rules[0]
+        if len(matches) == 1:
+            rule = matches[0]
             return ClassificationResult(
                 status=ClassificationStatus.CLASSIFIED,
                 raw_title=raw_title,
                 category=rule.category,
             )
-        
+
+        # Review required
+            # No matches or multiple matches
         return ClassificationResult(
             status=ClassificationStatus.REVIEW_REQUIRED,    
             raw_title=raw_title,
-            category=None
+            category=None, 
         )
