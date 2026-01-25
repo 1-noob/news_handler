@@ -5,7 +5,7 @@ News Handler is a lightweight system for fetching articles from news websites, c
 
 The project is designed to automate personal news collection by centralizing articles, organizing them using rule-based categorization, and persisting them reliably. It serves as the foundation for a future API-driven service to manage news-related tasks remotely.
 
-This system can easily be modified to suit individual needs like tracking buisness related news
+This system can easily be modified to suit individual needs like tracking buisness related news, or stock market news, or a blog. (Only requirement is that they should support [RSS](https://en.wikipedia.org/wiki/RSS) or else you have to use RSS genertor websites).
 
 ## Current Capabilities
 
@@ -26,6 +26,4 @@ This system can easily be modified to suit individual needs like tracking buisne
 - Python  
 - MongoDB  
 
-## Status
-
-Work in progress. Actively evolving.
+*Updates coming soon!*
