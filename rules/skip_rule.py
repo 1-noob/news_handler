@@ -8,8 +8,7 @@ class SkipRule:
 
     _pattern = re.compile(
         r"""
-        daily\s+quiz
-        |subject\s+wise\s+quiz
+        quiz
         |csat\s+quiz
         |expert\s+talk
         |interview\s+special
