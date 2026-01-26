@@ -59,6 +59,10 @@ class FeedWatcher:
 
             # Sending it to classify and clean
             result = self.classifier.classify(raw_title)
+
+            # Skipping SKIPPED articles
+            if result.status == ClassificationStatus.SKIPPED:
+                continue
             
             data[url]={
                 "title": result.title,
