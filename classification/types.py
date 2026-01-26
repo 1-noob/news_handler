@@ -6,6 +6,7 @@ from typing import Optional
 class ClassificationStatus(Enum):
     CLASSIFIED = "classified"
     REVIEW_REQUIRED = "review_required"
+    SKIPPED = "skipped"
     
     
     
@@ -16,5 +17,5 @@ class ClassificationStatus(Enum):
 @dataclass(frozen=True)
 class ClassificationResult:
     status: ClassificationStatus
-    raw_title: str
+    title: str
     category: Optional[str] = None
