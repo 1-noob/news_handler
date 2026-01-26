@@ -17,30 +17,37 @@ class ArticleClassifier:
         
         # Skip rules
         for rule in self._skip_rule:
-            if rule.matches(raw_title):
+            if rule.match(raw_title):
                 return ClassificationResult(
                     status=ClassificationStatus.SKIPPED,
-                    raw_title=raw_title,
+                    title=raw_title,
                     category=None,
                 )
         
         # Classification rules
-        matches = [
-            r for r in self._classification_rules if r.matches(raw_title)
-            ]
+        matches = []
+        cleaned_title = raw_title
 
+        for rule in self._classification_rules:
+            if rule.match(raw_title):
+                matches.append(rule)
+                cleaned_title = rule.extract_title(raw_title)
+        
         if len(matches) == 1:
             rule = matches[0]
             return ClassificationResult(
                 status=ClassificationStatus.CLASSIFIED,
-                raw_title=raw_title,
+                title=cleaned_title,
                 category=rule.category,
             )
 
         # Review required
-            # No matches or multiple matches
         return ClassificationResult(
-            status=ClassificationStatus.REVIEW_REQUIRED,    
-            raw_title=raw_title,
-            category=None, 
-        )
+            status=ClassificationStatus.REVIEW_REQUIRED,
+            title=raw_title,
+            category=None,
+        )        
+
+# Example usage:
+if __name__ == "__main__":
+    article_classifier = ArticleClassifier(CONFIG.SKIP_RULE, CONFIG.CLASSIFICATION_RULES)
