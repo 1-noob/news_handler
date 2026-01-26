@@ -6,7 +6,7 @@ class UpscKeyRule(ClassificationRule):
 
     _pattern = re.compile(r"^UPSC\s+Key\s*:", re.IGNORECASE)
 
-    def match(self, title: str, url: str | None=None) -> bool:
+    def match(self, title: str) -> bool:
         return bool(self._pattern.search(title))
 
     def extract_title(self, title: str) -> str:
