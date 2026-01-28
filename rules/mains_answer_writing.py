@@ -5,7 +5,12 @@ class MainsAnswerWritingRule(ClassificationRule):
     category = "Mains Answer Writing"
 
     _pattern = re.compile(
-        r"\bMains\s+Answer\s+(Practice|Writing)\b",
+        r"Mains[-\s]+answer[-\s]+practice",
+        re.IGNORECASE
+    )
+
+    _cleanup = re.compile(
+        r"^.*?(?=GS\s*\d+)",
         re.IGNORECASE
     )
 
@@ -13,5 +18,5 @@ class MainsAnswerWritingRule(ClassificationRule):
         return bool(self._pattern.search(title))
 
     def extract_title(self, title: str) -> str:
-        cleaned = self._pattern.sub("", title)
+        cleaned = self._cleanup.sub("", title)
         return cleaned.strip(" -:|—")
