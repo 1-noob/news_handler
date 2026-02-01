@@ -60,6 +60,10 @@ class FeedWatcher:
             raw_title = news.title
             url = news.link
 
+            # Skipping quizes
+            if "quiz" in raw_title.lower():
+                continue
+
             # If URL already exists in classified_data or review_data, skip it
             result = self.classifier.classify(raw_title)
             
