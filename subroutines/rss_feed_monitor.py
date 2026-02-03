@@ -6,6 +6,7 @@ from pathlib import Path
 
 from classification.classifier import ArticleClassifier
 from classification.types import ClassificationStatus
+from subroutines.hash_generator import HashGenerator
 
 import config as CONFIG
 
@@ -63,8 +64,13 @@ class FeedWatcher:
             # Skipping quizes
             if "quiz" in raw_title.lower():
                 continue
+            
+            hash_id = HashGenerator.generate(url)
+            if self.dbMan.check_duplicate(hash_id):
+                # print(f"Skipping: {url}")
+                continue
 
-            # If URL already exists in classified_data or review_data, skip it
+            # Classification
             result = self.classifier.classify(raw_title)
             
             record = {
