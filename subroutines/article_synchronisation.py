@@ -29,7 +29,7 @@ class ArticleSyncService:
         
         return data
     
-    async def _insert_single(self, url: str, articles: dict) -> bool:
+    async def _insert_single(self, url: str, article: dict) -> bool:
         """
         Inserts a single article asynchronously.
         """
