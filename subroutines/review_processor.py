@@ -5,6 +5,7 @@ from typing import Dict
 import config as CONFIG
 from subroutines.database_manager import DatabaseManager
 from subroutines.hash_generator import HashGenerator
+from subroutines.backup_manager import BackupManager
 
 
 class Reviewer:
@@ -15,6 +16,7 @@ class Reviewer:
     def __init__(self, review_path: Path):
         self.review_path = review_path
         self.dbMan = DatabaseManager()
+        self.backupMan = BackupManager()
 
     def load_review_articles(self) -> Dict:
         if not self.review_path.exists():
@@ -98,6 +100,16 @@ class Reviewer:
 
             if success:
                 print("✅ Article inserted into database.")
+
+                # Adding to backup file
+                self.backupMan.add(
+                    title = raw_title,
+                    link = url,
+                    category = category,
+                    status = CONFIG.STATUS_DEFAULT,
+                    stars = CONFIG.RATING_DEFAULT 
+                )
+                self.backupMan.flush()
             else:
                 print("⚠ Failed to insert. Article kept in review file.")
                 remaining[url] = article

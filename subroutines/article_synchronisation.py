@@ -6,6 +6,7 @@ from typing import Dict
 import config as CONFIG
 from subroutines.database_manager import DatabaseManager
 from subroutines.hash_generator import HashGenerator
+from subroutines.backup_manager import BackupManager
 
 class ArticleSyncService:
     """
@@ -16,6 +17,7 @@ class ArticleSyncService:
     def __init__(self, json_path: Path):
         self.json_path = json_path
         self.dbMan = DatabaseManager()
+        self.backupMan = BackupManager()
 
     def load_articles(self)-> Dict:
         if not self.json_path.exists():
@@ -47,13 +49,27 @@ class ArticleSyncService:
         if not title or not category:
             return False
 
-        return await asyncio.to_thread(
+        success = await asyncio.to_thread(
             self.dbMan.insert_record,
             hash_id,
             title,
             category,
             url
         )
+
+        if not success:
+            return False
+        
+        await asyncio.to_thread(
+            self.backupMan.add,
+            title, 
+            url,
+            category,
+            CONFIG.STATUS_DEFAULT,
+            CONFIG.RATING_DEFAULT
+        )
+        await asyncio.to_thread(self.backupMan.flush)
+        return True
 
     async def _batch_insert(self) -> Dict:
         """
