@@ -13,14 +13,15 @@ class Reviewer:
     Handles manual supervision to deal with skipped articles
     """
 
-    def __init__(self, review_path: Path):
-        self.review_path = review_path
+    def __init__(self):
+        self.review_path = Path(CONFIG.REVIEW_FILE)
         self.dbMan = DatabaseManager()
         self.backupMan = BackupManager()
 
     def load_review_articles(self) -> Dict:
         if not self.review_path.exists():
-            raise FileNotFoundError(f"Review file not found: {self.review_path}")
+            # raise FileNotFoundError(f"Review file not found: {self.review_path}")
+            return {}
         
         with open(self.review_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -37,8 +38,13 @@ class Reviewer:
 
     # review loop
     def process_review(self):
-        
+
+        # Handle empty review.json        
         review_data = self.load_review_articles()
+        if not review_data:
+            print("Review.json is empty")
+            return
+        
         remaining = {}
 
         print(f"\nLoaded {len(review_data)} articles for review. \n")
@@ -61,7 +67,8 @@ class Reviewer:
             # Discard
             # -------------------------
             if choice == "3":
-                print("❌ Article discarded.")
+                # Discard article forever
+                print("Article discarded.")
                 continue
 
             # -------------------------
@@ -70,7 +77,7 @@ class Reviewer:
             if choice == "1":
                 category = input("Enter category name: ").strip()
                 if not category:
-                    print("⚠ Empty category. Article kept in review file.")
+                    print("Empty category. Article kept in review file.")
                     remaining[url] = article
                     continue
 
@@ -78,7 +85,7 @@ class Reviewer:
                 category = CONFIG.SPECIAL_REVIEW_CATEGORY
 
             else:
-                print("⚠ Invalid choice. Article kept in review file.")
+                print("Invalid choice. Article kept in review file.")
                 remaining[url] = article
                 continue
 
@@ -88,7 +95,7 @@ class Reviewer:
             hash_id = HashGenerator.get_hash_str(url)
 
             if self.dbMan.check_duplicate(hash_id):
-                print("⚠ Article already exists in DB. Skipping.")
+                print("Article already exists in DB. Removing from the file.")
                 continue
 
             success = self.dbMan.insert_record(
@@ -99,7 +106,7 @@ class Reviewer:
             )
 
             if success:
-                print("✅ Article inserted into database.")
+                print("Article inserted into database.")
 
                 # Adding to backup file
                 self.backupMan.add(
@@ -109,13 +116,20 @@ class Reviewer:
                     status = CONFIG.STATUS_DEFAULT,
                     stars = CONFIG.RATING_DEFAULT 
                 )
-                self.backupMan.flush()
             else:
-                print("⚠ Failed to insert. Article kept in review file.")
+                print("Failed to insert. Article kept in review file.")
                 remaining[url] = article
+                continue
+        
+        self.backupMan.flush()
 
         # Save leftover articles (if any)
         self.save_review_articles(remaining)
 
         print("\nReview session completed.")
         print(f"Remaining articles in review file: {len(remaining)}")
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+    Reviewer().process_review()
