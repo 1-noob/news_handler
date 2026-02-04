@@ -31,9 +31,19 @@ class ArticleSyncService:
         
         return data
     
+    async def insert_one(self, url:str, article:dict) -> bool:
+        """
+        Flushes single article entries
+        """
+        success = await self._insert_single(url, article)
+        if success:
+            self.backupMan.flush()
+        return success
+    
     async def _insert_single(self, url: str, article: dict) -> bool:
         """
-        Inserts a single article asynchronously.
+        Inserts a single article asynchronously. 
+        To be used by batch_insert() and insert_one()
         """
 
         hash_id = HashGenerator.get_hash_str(url)
@@ -68,7 +78,6 @@ class ArticleSyncService:
             CONFIG.STATUS_DEFAULT,
             CONFIG.RATING_DEFAULT
         )
-        await asyncio.to_thread(self.backupMan.flush)
         return True
 
     async def _batch_insert(self) -> Dict:
@@ -77,19 +86,50 @@ class ArticleSyncService:
         Returns stats dict for API
         """
         articles = self.load_articles()
+        remaining = {}
 
         tasks = [
             self._insert_single(url, article)
             for url, article in articles.items()
         ]
 
-        results = await asyncio.gather(tasks)
+        results = await asyncio.gather(*tasks)
+        
+        for (url, article), success in zip(articles.items(), results):
+            if not success:
+                remaining[url] = article
+        
+        # rewrite cache file
+        with open(self.json_path, "w", encoding="utf-8") as f:
+            json.dump(remaining, f, indent=2, ensure_ascii=False)
+
+        # Flush once
+        self.backupMan.flush
+
+        inserted = sum(1 for r in results if r)
+        skipped = len(results) - inserted
 
         return {
-            "inserted": sum(results),
-            "skipped": len(results) - sum(results),
+            "inserted": inserted,
+            "skipped": skipped,
             "total": len(results)
         }
 
 
 
+if __name__ == "__main__":
+    async def main():
+        service = ArticleSyncService(
+            json_path=Path(CONFIG.CACHE_FILE)
+        )
+
+        stats = await service._batch_insert()
+
+        print("\Sync Summary")
+        print("-" * 40)
+        print(f"Total articles : {stats['total']}")
+        print(f"Inserted       : {stats['inserted']}")
+        print(f"Skipped        : {stats['skipped']}")
+        print("-" * 40)
+
+    asyncio.run(main())
