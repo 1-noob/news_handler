@@ -104,7 +104,7 @@ class ArticleSyncService:
             json.dump(remaining, f, indent=2, ensure_ascii=False)
 
         # Flush once
-        self.backupMan.flush
+        self.backupMan.flush()
 
         inserted = sum(1 for r in results if r)
         skipped = len(results) - inserted
