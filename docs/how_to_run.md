@@ -1,5 +1,14 @@
 ## Requirements
-+ A MongoDB database with following schema
++ A MongoDB database with following attributes :
+
+    + `_id` : hash (primary key)
+    + `Article_title` : String
+    + `Category` : String
+    + `URL` : String
+    + `Status` : Number (default 0)
+    + `Rating` : Number (default 1)
+
++ A config file based on config template. (Rename config_template.py to config.py and fill out the paths with paths on your device)
 
 
 ## Configuration
