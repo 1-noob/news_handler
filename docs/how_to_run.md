@@ -1,6 +1,8 @@
 ## Requirements
-+ A MongoDB database with following attributes :
++ A MongoDB database on MongoDB Compass :
+    (For step by step instructions refer (this link)[https://www.geeksforgeeks.org/mongodb/create-database-using-mongodb-compass/])
 
+    The database must have following attributes:
     + `_id` : hash (primary key)
     + `Article_title` : String
     + `Category` : String
@@ -9,6 +11,8 @@
     + `Rating` : Number (default 1)
 
 + A config file based on config template. (Rename config_template.py to config.py and fill out the paths with paths on your device)
+
++ 
 
 
 ## Configuration
