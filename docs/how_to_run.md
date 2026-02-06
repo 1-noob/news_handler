@@ -1,6 +1,6 @@
 ## Requirements
 + A MongoDB database on MongoDB Compass :
-    (For step by step instructions refer (this link)[https://www.geeksforgeeks.org/mongodb/create-database-using-mongodb-compass/])
+    (For step by step instructions refer (this link)https://www.geeksforgeeks.org/mongodb/create-database-using-mongodb-compass/)
 
     The database must have following attributes:
     + `_id` : hash (primary key)
@@ -12,7 +12,9 @@
 
 + A config file based on config template. (Rename config_template.py to config.py and fill out the paths with paths on your device)
 
-+ 
++ Some files:
+    + `backup.json` : It acts like a backup for database. Host it on Github in a repository (in same or different location) so that you dont loose access to it.
+    + `new_articles.json` & `review.json` (store them under `article_cache` subdirectory)
 
 
 ## Configuration
