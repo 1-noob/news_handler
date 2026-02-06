@@ -18,6 +18,7 @@ CACHE_FILE = "<PATH_TO>/article_cache/new_articles.json"
 REVIEW_FILE = "<PATH_TO>/article_cache/review.json"
 
 # Path to backup file (used for git commits)
+    # Ideally in a seperate folder
 BACKUP_FILE = "<PATH_TO>/backup.json"
 
 
