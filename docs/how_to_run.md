@@ -1,6 +1,8 @@
 ## Requirements
 + A MongoDB database on MongoDB Compass :
-    (For step by step instructions refer (this link)https://www.geeksforgeeks.org/mongodb/create-database-using-mongodb-compass/)
+    (For step by step instructions refer [this link.](https://www.geeksforgeeks.org/mongodb/) 
+    
+    create-database-using-mongodb-compass/)
 
     The database must have following attributes:
     + `_id` : hash (primary key)
