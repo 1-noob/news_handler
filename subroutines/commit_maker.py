@@ -35,6 +35,8 @@ class GitHandler:
     def commit(self, message: str):
         self._run(["git", "commit", "-m", message])
 
+    def push(self):
+        return self._run(["git", "push"])
 
 
 
@@ -59,6 +61,7 @@ class CommitMaker:
         commit_msg = self._build_commit_message()
         self.git.stage_files([self.backup_file])
         self.git.commit(commit_msg)
+        self.git.push()
         return commit_msg
     
     @staticmethod
