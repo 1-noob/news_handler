@@ -34,9 +34,16 @@ def rebuild_backup_from_database(backup_path: str):
     backup_data = {}
 
     for doc in records:
-        hash_id = doc["_id"]
-        doc.pop("_id")
-        backup_data[hash_id] = doc
+        url = doc.get("URL")
+        if not url:
+            continue
+    
+        backup_data[url] = {
+            "Article Title": doc.get("Article Title"),
+            "Category": doc.get("Category"),
+            "Status": doc.get("Status"),    
+            "Rating": doc.get("Rating")
+        }
 
     with open(backup_path, "w", encoding="utf-8") as f:
         json.dump(backup_data, f, indent=4)
