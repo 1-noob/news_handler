@@ -26,7 +26,7 @@ class FeedWatcher:
         self.review_location.parent.mkdir(parents=True, exist_ok=True)
      
     def _read_json(self,path) -> dict:
-        """Read existing JSON or returns epmty dict"""
+        """Read existing JSON or returns empty dict"""
         if not path.exists():
             return {}
 
@@ -56,6 +56,15 @@ class FeedWatcher:
 
         classified_data = self._read_json(self.save_location)
         review_data = self._read_json(self.review_location)
+
+        stats = {
+            "rss_entries": len(news_feed.entries),
+            "skipped_quizzes": 0,
+            "skipped_duplicates": 0,
+            "classified": 0,
+            "needs_review": 0,
+            "new_articles": 0
+        }
         
         # working with news titles.
         for news in news_feed.entries:
@@ -65,11 +74,13 @@ class FeedWatcher:
 
             # Skipping quizes
             if "quiz" in raw_title.lower():
+                stats["skipped_quizzes"] += 1
                 continue
             
             hash_id = HashGenerator.get_hash_str(url)
             if self.dbMan.check_duplicate(hash_id):
                 # print(f"Skipping: {url}")
+                stats["skipped_duplicates"] += 1
                 continue
 
             # Classification
@@ -83,17 +94,23 @@ class FeedWatcher:
 
             if result.status == ClassificationStatus.CLASSIFIED and result.category is not None:
                 classified_data[url] = record
+                stats["classified"] += 1
             else:
                 review_data[url] = record
+                stats["needs_review"] += 1
+
+            stats["new_articles"] += 1
 
         self._write_json(classified_data, self.save_location)
         self._write_json(review_data, self.review_location)
             
-
+        return stats
+            
 
 
 
 # Main code
 if __name__ == "__main__":
     watchman = FeedWatcher()
-    watchman.check_feed()
+    stats = watchman.check_feed()
+    print(json.dumps(stats, indent=4))
