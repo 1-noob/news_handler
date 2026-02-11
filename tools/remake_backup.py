@@ -46,7 +46,7 @@ def rebuild_backup_from_database(backup_path: str):
         }
 
     with open(backup_path, "w", encoding="utf-8") as f:
-        json.dump(backup_data, f, indent=4)
+        json.dump(backup_data, f, indent=4, ensure_ascii=False)
 
     print(f"Rebuilt backup with {len(backup_data)} articles")
 

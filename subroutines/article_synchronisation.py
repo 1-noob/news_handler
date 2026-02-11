@@ -35,12 +35,22 @@ class ArticleSyncService:
         """
         Flushes single article entries
         """
-        success = await self._insert_single(url, article)
-        if success:
+        result = await self._insert_single(url, article)
+        
+        if result and result["success"]:
+            self.backupMan.add(
+                title=result["title"],
+                link=result["url"],
+                category=result["category"],
+                status=CONFIG.STATUS_DEFAULT,
+                stars=CONFIG.RATING_DEFAULT
+            )
             self.backupMan.flush()
-        return success
+            return True
+        
+        return False
     
-    async def _insert_single(self, url: str, article: dict) -> bool:
+    async def _insert_single(self, url: str, article: dict) -> dict | bool:
         """
         Inserts a single article asynchronously. 
         To be used by batch_insert() and insert_one()
@@ -70,15 +80,13 @@ class ArticleSyncService:
         if not success:
             return False
         
-        await asyncio.to_thread(
-            self.backupMan.add,
-            title, 
-            url,
-            category,
-            CONFIG.STATUS_DEFAULT,
-            CONFIG.RATING_DEFAULT
-        )
-        return True
+        return {
+            "success": True,
+            "title": title,
+            "url": url,
+            "category": category
+        }
+
 
     async def _batch_insert(self) -> Dict:
         """
@@ -95,18 +103,26 @@ class ArticleSyncService:
 
         results = await asyncio.gather(*tasks)
         
-        for (url, article), success in zip(articles.items(), results):
-            if not success:
+        for (url, article), result in zip(articles.items(), results):
+            if result and result["success"]:
+                self.backupMan.add(
+                    title=result["title"],
+                    link=result["url"],
+                    category=result["category"],
+                    status=CONFIG.STATUS_DEFAULT,
+                    stars=CONFIG.RATING_DEFAULT
+                )
+            else:
                 remaining[url] = article
-        
-        # rewrite cache file
-        with open(self.json_path, "w", encoding="utf-8") as f:
-            json.dump(remaining, f, indent=2, ensure_ascii=False)
+
+        # rewrite remaining articles back to JSON for next sync
+        with open(self.json_path, 'w', encoding="utf-8") as f:
+            json.dump(remaining, f, ensure_ascii=False, indent=4)
 
         # Flush once
         self.backupMan.flush()
 
-        inserted = sum(1 for r in results if r)
+        inserted = sum(1 for r in results if isinstance(r, dict))
         skipped = len(results) - inserted
 
         return {
@@ -125,7 +141,7 @@ if __name__ == "__main__":
 
         stats = await service._batch_insert()
 
-        print("\Sync Summary")
+        print("\nSync Summary")
         print("-" * 40)
         print(f"Total articles : {stats['total']}")
         print(f"Inserted       : {stats['inserted']}")
