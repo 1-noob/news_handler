@@ -8,8 +8,11 @@ import config as CONFIG
 router = APIRouter(prefix="/api")
 
 @router.post("/scan")
-# Scans the RSS feed and returns data about articles.
 def scan_rss():
+    """
+    Scans the RSS feed and returns data about articles
+    """
+
     try:
         watchman = FeedWatcher()
         stats = watchman.check_feed()
