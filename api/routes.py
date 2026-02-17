@@ -47,3 +47,10 @@ async def proceed_sync():
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/ping")
+def test_endpoint():
+    return {
+        "status": "ok",
+        "message": "Test endpoint is working!"
+    }
