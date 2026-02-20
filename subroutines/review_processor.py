@@ -7,6 +7,7 @@ from subroutines.database_manager import DatabaseManager
 from subroutines.hash_generator import HashGenerator
 from subroutines.backup_manager import BackupManager
 from subroutines.discard_manager import DiscardManager
+from subroutines.commit_maker import CommitMaker
 
 
 class Reviewer:
@@ -19,6 +20,7 @@ class Reviewer:
         self.dbMan = DatabaseManager()
         self.backupMan = BackupManager()
         self.discardMan = DiscardManager()
+        self.commitMaker = CommitMaker()
 
     def load_review_articles(self) -> Dict:
         if not self.review_path.exists():
@@ -129,8 +131,13 @@ class Reviewer:
         # Save leftover articles (if any)
         self.save_review_articles(remaining)
 
+        # Commit changes in discard file (if any)
+        discard_msg = self.commitMaker.commit_discard_if_needed()
+
         print("\nReview session completed.")
-        print(f"Remaining articles in review file: {len(remaining)}")
+        print(f"Review completed. {len(remaining)} articles remain in review file.")
+        if discard_msg:
+            print(discard_msg)
 
 
 if __name__ == "__main__":
