@@ -41,7 +41,7 @@ class DiscardManager:
     def add_to_discard(self, article_url: str):
         """Adds an article URL to the discard list."""
         discard_set = self._read_json()
-        article_hash = HashGenerator.generate_hash(article_url)
+        article_hash = HashGenerator.get_hash_str(article_url)
         
         if article_hash not in discard_set:
             discard_set.add(article_hash)
@@ -50,5 +50,5 @@ class DiscardManager:
     def is_discarded(self, article_url: str) -> bool:
         """Checks if an article URL is in the discard list."""
         discard_set = self._read_json()
-        article_hash = HashGenerator.generate_hash(article_url)
+        article_hash = HashGenerator.get_hash_str(article_url)
         return article_hash in discard_set
