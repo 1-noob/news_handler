@@ -6,6 +6,7 @@ import config as CONFIG
 from subroutines.database_manager import DatabaseManager
 from subroutines.hash_generator import HashGenerator
 from subroutines.backup_manager import BackupManager
+from subroutines.discard_manager import DiscardManager
 
 
 class Reviewer:
@@ -17,6 +18,7 @@ class Reviewer:
         self.review_path = Path(CONFIG.REVIEW_FILE)
         self.dbMan = DatabaseManager()
         self.backupMan = BackupManager()
+        self.discardMan = DiscardManager()
 
     def load_review_articles(self) -> Dict:
         if not self.review_path.exists():
@@ -69,6 +71,7 @@ class Reviewer:
             if choice == "3":
                 # Discard article forever
                 print("Article discarded.")
+                self.discardMan.add_to_discard(url)
                 continue
 
             # -------------------------

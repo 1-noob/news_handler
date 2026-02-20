@@ -32,3 +32,5 @@ This system can easily be modified to suit individual needs like tracking buisne
 Step by step to run the project (as it is) with setup instructions, configuration details & execution workflow:
 
 [How to run the project](https://github.com/1-noob/news_handler/blob/main/docs/how_to_run.md)
+
+## API Documentation    

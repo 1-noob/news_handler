@@ -88,6 +88,14 @@ class ArticleSyncService:
         }
 
 
+    async def sync_all(self) -> Dict:
+        """
+        Public method to sync all cached articles.
+        Safe for API usage.
+        """
+        return await self._batch_insert()
+
+
     async def _batch_insert(self) -> Dict:
         """
         Batch inserts all articles asynchronously.
