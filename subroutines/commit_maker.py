@@ -37,6 +37,10 @@ class GitHandler:
 
     def push(self):
         return self._run(["git", "push"])
+    
+    def file_has_changes(self, file_name: str) -> bool:
+        result = self._run(["git", "status", "--porcelain", file_name])
+        return bool(result.stdout.strip())
 
 
 
@@ -49,20 +53,38 @@ class CommitMaker:
         self.repo_dir = os.path.abspath(os.path.dirname(CONFIG.backup))
         self.backup_file = os.path.basename(CONFIG.backup)
         self.file_path = os.path.join(self.repo_dir, self.backup_file)
+        self.discard_file = os.path.basename(CONFIG.DISCARD_FILE)
         self.git = GitHandler()
 
-    def commit_if_needed(self) -> str|None:
+    def commit_backup_if_needed(self) -> str:
         """
         Checks if backup json file has changed and commits it
         """
-        if not self.git.has_changes():
-            return None
+
+        if not self.git.file_has_changes(self.backup_file):
+            return "No changes to commit in backup file."
         
         commit_msg = self._build_commit_message()
         self.git.stage_files([self.backup_file])
         self.git.commit(commit_msg)
         self.git.push()
-        return commit_msg
+
+        return f"Changes committed to backup file " 
+          
+    
+    def commit_discard_if_needed(self) -> str:
+        """Checks if discard json file has changed and commits it
+        """
+
+        if not self.git.file_has_changes(self.discard_file):
+            return "No changes to commit in discard file."
+            
+        commit_msg = f"Discard update for {datetime.now().strftime('%d-%m-%Y')}"
+        self.git.stage_files([self.discard_file])
+        self.git.commit(commit_msg)
+        self.git.push()    
+
+        return f"Changes committed to discard file"
     
     @staticmethod
     def _build_commit_message() -> str:
@@ -74,4 +96,4 @@ if __name__ == "__main__":
 
     commit_msg = commit_maker.commit_if_needed()
     if commit_msg:
-        print(f"Committed: {commit_msg}")
+        print(f"Changes committed!")
