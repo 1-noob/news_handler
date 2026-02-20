@@ -47,6 +47,15 @@ class Reviewer:
         review_data = self.load_review_articles()
         if not review_data:
             print("Review.json is empty")
+            
+            # Ensure backup file is up to date
+            self.backupMan.flush() 
+
+            # Commit discard file if needed
+            discard_msg = self.commitMaker.commit_discard_if_needed()   
+            if discard_msg:
+                print(discard_msg)
+
             return
         
         remaining = {}
