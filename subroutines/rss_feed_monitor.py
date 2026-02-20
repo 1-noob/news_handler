@@ -8,6 +8,7 @@ from classification.classifier import ArticleClassifier
 from classification.types import ClassificationStatus
 from subroutines.hash_generator import HashGenerator
 from subroutines.database_manager import DatabaseManager
+from subroutines.discard_manager import DiscardManager
 
 import config as CONFIG
 
@@ -20,6 +21,7 @@ class FeedWatcher:
         self.review_location = Path(CONFIG.REVIEW_FILE)
         self.classifier = ArticleClassifier(CONFIG.SKIP_RULE, CONFIG.CLASSIFICATION_RULES)
         self.dbMan = DatabaseManager()
+        self.discardMan = DiscardManager()
         
         # Ensuring that the cache file exists
         self.save_location.parent.mkdir(parents=True, exist_ok=True)
@@ -78,6 +80,12 @@ class FeedWatcher:
                 continue
             
             hash_id = HashGenerator.get_hash_str(url)
+
+            # Skip if already in discard list
+            if self.discardMan.is_discarded(url):
+                stats["skipped_duplicates"] += 1
+                continue
+            
             if self.dbMan.check_duplicate(hash_id):
                 # print(f"Skipping: {url}")
                 stats["skipped_duplicates"] += 1
