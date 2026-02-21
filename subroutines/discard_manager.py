@@ -19,16 +19,16 @@ class DiscardManager:
 
     def _read_json_once(self):
         """Reads the discard list from the JSON file once and keeps it in memory"""
-        if not self._loaded:
+        if self._loaded:
             return 
         
         if self.discard_file.exists():
             try:
-                    with open(self.discard_file, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
+                with open(self.discard_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
                     
-                    if isinstance(data, list):
-                        self.cache = set(data)
+                if isinstance(data, list):
+                    self.cache = set(data)
                 
             except (json.JSONDecodeError, IOError):
                     self.cache = set()
@@ -45,11 +45,11 @@ class DiscardManager:
 
     def add_to_discard(self, article_url: str):
         """Adds an article URL to the discard list."""
-        discard_set = self._read_json_once()
+        self._read_json_once()
         article_hash = HashGenerator.get_hash_str(article_url)
         
-        if article_hash not in discard_set:
-            discard_set.add(article_hash)
+        if article_hash not in self.cache:
+            self.cache.add(article_hash)
             self._write_json()
 
     def is_discarded(self, article_url: str) -> bool:

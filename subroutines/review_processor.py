@@ -63,6 +63,11 @@ class Reviewer:
         print(f"\nLoaded {len(review_data)} articles for review. \n")
 
         for url,article in review_data.items():
+
+            # Skip if article is in discard list
+            if self.discardMan.is_discarded(url):
+                continue
+
             raw_title = article.get("title", "").strip()
 
             print("\n" + "=" * 80)
