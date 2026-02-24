@@ -173,34 +173,41 @@ class Reviewer:
 
         # GET NEXT ARTICLE
         if action == "get_next":
-            for article_url, article in review_data.items():
-                if not self.discardMan.is_discarded(article_url):
-                    return self._response(
-                        success=True,
-                        status="ready",
-                        data={
-                            "url": article_url,
-                            "title": article.get("title", "")
-                        }
-                    )
+            if not review_data:
+                # Ensure backup and discard states are flushed
+                self.backupMan.flush()
+                self.commitMaker.commit_discard_if_needed()
+
+                return self._response(
+                    success=True,
+                    status="empty",
+                    data=None
+                )
+            
+            article_url, article = next(iter(review_data.items()))
+            
             return self._response(
                 success=True,
-                status="empty",
-                data=None
+                status="ready",
+                data={
+                    "url": article_url,
+                    "title": article.get("title", "")
+                }
             )
         
         # VALIDATION
-        if not url or url not in review_data:
-            return self._response(
-                success=False,
-                status="error",
-                message="Invalid or missing URL"
-            )
-        
-        article = review_data[url]
-        raw_title = article.get("title", "").strip()
+        if action != "get_next":   
+            if not url or url not in review_data:
+                return self._response(
+                    success=False,
+                    status="error",
+                    message="Invalid or missing URL"
+                )
+            
+        try:            
+            article = review_data[url]
+            raw_title = article.get("title", "").strip()
 
-        try:
             # DISCARD
             if action == "discard":
                 self.discardMan.add_to_discard(url)
@@ -280,16 +287,17 @@ class Reviewer:
             self.commitMaker.commit_discard_if_needed()
 
             # RETURN NEXT ARTICLE
-            for next_url, next_article in review_data.items():
-                if not self.discardMan.is_discarded(next_url):
-                    return self._response(
-                        success=True,   
-                        status="ready",
-                        data={
-                            "url": next_url,
-                            "title": next_article.get("title", "")
-                        }
-                    )
+            if review_data:
+                next_url, next_article = next(iter(review_data.items()))
+
+                return self._response(
+                    success=True,   
+                    status="ready",
+                    data={
+                        "url": next_url, 
+                        "title": next_article.get("title", "")
+                    }
+                )
                 
             return self._response(
                 success=True,
