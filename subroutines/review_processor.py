@@ -22,6 +22,15 @@ class Reviewer:
         self.discardMan = DiscardManager()
         self.commitMaker = CommitMaker()
 
+    def _response(self, success: bool, status: str, message: str = None, data: Dict = None) -> Dict:
+        """Helper response builder."""
+        return {
+            "success": success,
+            "status": status,
+            "message": message,
+            "data": data
+        }
+
     def load_review_articles(self) -> Dict:
         if not self.review_path.exists():
             # raise FileNotFoundError(f"Review file not found: {self.review_path}")
