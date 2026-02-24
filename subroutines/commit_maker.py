@@ -69,7 +69,7 @@ class CommitMaker:
         self.git.commit(commit_msg)
         self.git.push()
 
-        return f"Changes committed to backup file " 
+        return f"Changes committed to backup file" 
           
     
     def commit_discard_if_needed(self) -> str:
@@ -94,6 +94,6 @@ class CommitMaker:
 if __name__ == "__main__":
     commit_maker = CommitMaker()
 
-    commit_msg = commit_maker.commit_if_needed()
+    commit_msg = commit_maker.commit_backup_if_needed()
     if commit_msg:
-        print(f"Changes committed!")
+        print(f"Changes committed: {commit_msg}")

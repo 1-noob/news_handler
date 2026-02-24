@@ -22,6 +22,15 @@ class Reviewer:
         self.discardMan = DiscardManager()
         self.commitMaker = CommitMaker()
 
+    def _response(self, success: bool, status: str, message: str = None, data: Dict = None) -> Dict:
+        """Helper response builder."""
+        return {
+            "success": success,
+            "status": status,
+            "message": message,
+            "data": data
+        }
+
     def load_review_articles(self) -> Dict:
         if not self.review_path.exists():
             # raise FileNotFoundError(f"Review file not found: {self.review_path}")
@@ -47,6 +56,15 @@ class Reviewer:
         review_data = self.load_review_articles()
         if not review_data:
             print("Review.json is empty")
+            
+            # Ensure backup file is up to date
+            self.backupMan.flush() 
+
+            # Commit discard file if needed
+            discard_msg = self.commitMaker.commit_discard_if_needed()   
+            if discard_msg:
+                print(discard_msg)
+
             return
         
         remaining = {}
@@ -54,6 +72,11 @@ class Reviewer:
         print(f"\nLoaded {len(review_data)} articles for review. \n")
 
         for url,article in review_data.items():
+
+            # Skip if article is in discard list
+            if self.discardMan.is_discarded(url):
+                continue
+
             raw_title = article.get("title", "").strip()
 
             print("\n" + "=" * 80)
@@ -81,7 +104,7 @@ class Reviewer:
             # -------------------------
             if choice == "1":
                 category = input("Enter category name: ").strip()
-                if not category:
+                if not category or not category.strip():
                     print("Empty category. Article kept in review file.")
                     remaining[url] = article
                     continue
@@ -138,6 +161,159 @@ class Reviewer:
         print(f"Review completed. {len(remaining)} articles remain in review file.")
         if discard_msg:
             print(discard_msg)
+
+
+    def process_review_api (self, action:str, url:str = None, category:str = None) -> Dict:
+        """
+        API version of the review processor.
+        Handles one article at a time and returns a structured response.
+        """
+
+        review_data = self.load_review_articles()
+
+        # GET NEXT ARTICLE
+        if action == "get_next":
+            if not review_data:
+                # Ensure backup and discard states are flushed
+                self.backupMan.flush()
+                self.commitMaker.commit_discard_if_needed()
+
+                return self._response(
+                    success=True,
+                    status="empty",
+                    data=None
+                )
+            
+            article_url, article = next(iter(review_data.items()))
+            
+            return self._response(
+                success=True,
+                status="ready",
+                data={
+                    "url": article_url,
+                    "title": article.get("title", "")
+                }
+            )
+        
+        # VALIDATION
+        if action != "get_next":   
+            if not url or url not in review_data:
+                return self._response(
+                    success=False,
+                    status="error",
+                    message="Invalid or missing URL"
+                )
+            
+        try:            
+            article = review_data[url]
+            raw_title = article.get("title", "").strip()
+
+            # DISCARD
+            if action == "discard":
+                self.discardMan.add_to_discard(url)
+                review_data.pop(url, None)
+
+            # INSERT WITH CATEGORY
+            elif action == "insert_prebuilt":
+                if not category:
+                    return self._response(
+                        success=False,
+                        status="error",
+                        message="Category is required for this action"
+                    )
+                
+                hash_id = HashGenerator.get_hash_str(url)
+
+                # Duplicate check
+                if self.dbMan.check_duplicate(hash_id):
+                    review_data.pop(url, None)
+                
+                else:
+                    success = self.dbMan.insert_record(
+                        hash_id=hash_id,
+                        title=raw_title,
+                        category=category,
+                        url=url
+                    )
+
+                    if not success:
+                        return self._response(
+                            success=False,  
+                            status="error",
+                            message="Failed to insert into DB"
+                        )
+                    
+                    self.backupMan.add(
+                        title = raw_title,  
+                        link = url,
+                        category = category,
+                        status = CONFIG.STATUS_DEFAULT,
+                        stars = CONFIG.RATING_DEFAULT
+                    )
+                    review_data.pop(url, None)
+            
+            # INSERT WITH SPECIAL CATEGORY
+            elif action == "insert_special":
+                category = CONFIG.SPECIAL_REVIEW_CATEGORY
+                hash_id = HashGenerator.get_hash_str(url)
+
+                if not self.dbMan.check_duplicate(hash_id):
+                    success = self.dbMan.insert_record(
+                        hash_id=hash_id,
+                        title=raw_title,
+                        category=category,
+                        url=url
+                    )
+
+                    if success:
+                        self.backupMan.add(
+                            title = raw_title,
+                            link = url,
+                            category = category,
+                            status = CONFIG.STATUS_DEFAULT,
+                            stars = CONFIG.RATING_DEFAULT 
+                        )
+                review_data.pop(url, None)
+            else:
+                return self._response(
+                    success=False,
+                    status="error",
+                    message="Invalid action"
+                )
+
+            # FINALIZE CHANGES
+            self.backupMan.flush()
+            self.save_review_articles(review_data)
+            self.commitMaker.commit_discard_if_needed()
+
+            # RETURN NEXT ARTICLE
+            if review_data:
+                next_url, next_article = next(iter(review_data.items()))
+
+                return self._response(
+                    success=True,   
+                    status="ready",
+                    data={
+                        "url": next_url, 
+                        "title": next_article.get("title", "")
+                    }
+                )
+                
+            return self._response(
+                success=True,
+                status="empty",
+                data=None
+            )
+            
+
+        except Exception as e:
+            return self._response(
+                success=False,
+                status="error",
+                message=str(e)
+            )
+        
+
 
 
 if __name__ == "__main__":
