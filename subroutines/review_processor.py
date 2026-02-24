@@ -154,6 +154,151 @@ class Reviewer:
             print(discard_msg)
 
 
+    def process_review_api (self, action:str, url:str = None, category:str = None) -> Dict:
+        """
+        API version of the review processor.
+        Handles one article at a time and returns a structured response.
+        """
+
+        review_data = self.load_review_articles()
+
+        # GET NEXT ARTICLE
+        if action == "get_next":
+            for article_url, article in review_data.items():
+                if not self.discardMan.is_discarded(url):
+                    return {
+                        "status": "success", 
+                        "action": "get_next", 
+                        "article": {
+                            "url": url, 
+                            "title": article.get("title", "")
+                            }
+                        }
+            return {
+                "success": True,
+                "status": "empty",
+                "article": None
+            }
+        
+        # VALIDATION
+        if not url or url not in review_data:
+            return {
+                "success": False,
+                "status": "failed",
+                "message": "Invalid or missing URL"
+            }
+        
+        article = review_data[url]
+        raw_title = article.get("title", "").strip()
+
+        try:
+            # DISCARD
+            if action == "discard":
+                self.discardMan.add_to_discard(url)
+                review_data.pop(url, None)
+
+            # INSERT WITH CATEGORY
+            elif action == "insert_prebuilt":
+                if not category:
+                    return {
+                        "success": False,
+                        "status": "failed",
+                        "error": "Category must be provided for insert_prebuilt action"
+                    }
+                
+                hash_id = HashGenerator.get_hash_str(url)
+
+                # Duplicate check
+                if self.dbMan.check_duplicate(hash_id):
+                    review_data.pop(url, None)
+                
+                else:
+                    success = self.dbMan.insert_record(
+                        hash_id=hash_id,
+                        title=raw_title,
+                        category=category,
+                        url=url
+                    )
+
+                    if not success:
+                        return {
+                            "success": False,   
+                            "status": "failed",
+                            "message": "Failed to insert into DB"
+                        }
+                    
+                    self.backupMan.add(
+                        title = raw_title,  
+                        link = url,
+                        category = category,
+                        status = CONFIG.STATUS_DEFAULT,
+                        stars = CONFIG.RATING_DEFAULT
+                    )
+                    review_data.pop(url, None)
+            
+            # INSERT WITH SPECIAL CATEGORY
+            elif action == "insert_special":
+                category = CONFIG.SPECIAL_REVIEW_CATEGORY
+                hash_id = HashGenerator.get_hash_str(url)
+
+                if not self.dbMan.check_duplicate(hash_id):
+                    success = self.dbMan.insert_record(
+                        hash_id=hash_id,
+                        title=raw_title,
+                        category=category,
+                        url=url
+                    )
+
+                    if success:
+                        self.backupMan.add(
+                            title = raw_title,
+                            link = url,
+                            category = category,
+                            status = CONFIG.STATUS_DEFAULT,
+                            stars = CONFIG.RATING_DEFAULT 
+                        )
+                review_data.pop(url, None)
+            else:
+                return {
+                    "success": False,
+                    "status": "failed",
+                    "message": "Failed to insert into DB"
+                }
+
+            # FINALIZE CHANGES
+            self.backupMan.flush()
+            self.save_review_articles(review_data)
+            self.commitMaker.commit_discard_if_needed()
+
+            # RETURN NEXT ARTICLE
+            for next_url, next_article in review_data.items():
+                if not self.discardMan.is_discarded(next_url):
+                    return {
+                        "success": True,
+                        "status": "completed",
+                        "article": {
+                            "url": next_url,
+                            "title": next_article.get("title", "")
+                        }
+                    }
+                
+            return {
+                "success": True,
+                "status": "completed",
+                "next_article": None
+            }
+            
+
+        except Exception as e:
+            return {
+                "success": False,
+                "status": "failed",
+                "message": str(e)
+            }
+        
+
+
+
 if __name__ == "__main__":
     from pathlib import Path
     Reviewer().process_review()
