@@ -104,7 +104,7 @@ class Reviewer:
             # -------------------------
             if choice == "1":
                 category = input("Enter category name: ").strip()
-                if not category:
+                if not category or not category.strip():
                     print("Empty category. Article kept in review file.")
                     remaining[url] = article
                     continue
@@ -174,28 +174,28 @@ class Reviewer:
         # GET NEXT ARTICLE
         if action == "get_next":
             for article_url, article in review_data.items():
-                if not self.discardMan.is_discarded(url):
-                    return {
-                        "status": "success", 
-                        "action": "get_next", 
-                        "article": {
-                            "url": url, 
+                if not self.discardMan.is_discarded(article_url):
+                    return self._response(
+                        success=True,
+                        status="ready",
+                        data={
+                            "url": article_url,
                             "title": article.get("title", "")
-                            }
                         }
-            return {
-                "success": True,
-                "status": "empty",
-                "article": None
-            }
+                    )
+            return self._response(
+                success=True,
+                status="empty",
+                data=None
+            )
         
         # VALIDATION
         if not url or url not in review_data:
-            return {
-                "success": False,
-                "status": "failed",
-                "message": "Invalid or missing URL"
-            }
+            return self._response(
+                success=False,
+                status="error",
+                message="Invalid or missing URL"
+            )
         
         article = review_data[url]
         raw_title = article.get("title", "").strip()
@@ -209,11 +209,11 @@ class Reviewer:
             # INSERT WITH CATEGORY
             elif action == "insert_prebuilt":
                 if not category:
-                    return {
-                        "success": False,
-                        "status": "failed",
-                        "error": "Category must be provided for insert_prebuilt action"
-                    }
+                    return self._response(
+                        success=False,
+                        status="error",
+                        message="Category is required for this action"
+                    )
                 
                 hash_id = HashGenerator.get_hash_str(url)
 
@@ -230,11 +230,11 @@ class Reviewer:
                     )
 
                     if not success:
-                        return {
-                            "success": False,   
-                            "status": "failed",
-                            "message": "Failed to insert into DB"
-                        }
+                        return self._response(
+                            success=False,  
+                            status="error",
+                            message="Failed to insert into DB"
+                        )
                     
                     self.backupMan.add(
                         title = raw_title,  
@@ -268,11 +268,11 @@ class Reviewer:
                         )
                 review_data.pop(url, None)
             else:
-                return {
-                    "success": False,
-                    "status": "failed",
-                    "message": "Failed to insert into DB"
-                }
+                return self._response(
+                    success=False,
+                    status="error",
+                    message="Invalid action"
+                )
 
             # FINALIZE CHANGES
             self.backupMan.flush()
@@ -282,28 +282,28 @@ class Reviewer:
             # RETURN NEXT ARTICLE
             for next_url, next_article in review_data.items():
                 if not self.discardMan.is_discarded(next_url):
-                    return {
-                        "success": True,
-                        "status": "completed",
-                        "article": {
+                    return self._response(
+                        success=True,   
+                        status="ready",
+                        data={
                             "url": next_url,
                             "title": next_article.get("title", "")
                         }
-                    }
+                    )
                 
-            return {
-                "success": True,
-                "status": "completed",
-                "next_article": None
-            }
+            return self._response(
+                success=True,
+                status="empty",
+                data=None
+            )
             
 
         except Exception as e:
-            return {
-                "success": False,
-                "status": "failed",
-                "message": str(e)
-            }
+            return self._response(
+                success=False,
+                status="error",
+                message=str(e)
+            )
         
 
 
