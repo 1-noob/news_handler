@@ -59,10 +59,12 @@ def test_endpoint():
 @router.post("/review")
 def review_article(
     action: str = Query(..., description="Action to perform on the article "),
-    url: str = Query(..., description="URL of the article to review"),
-    category: str = Query(None, description="Category for insert_prebuilt")
+    url: str | None = Query(None, description="URL of the article to review"),
+    category: str | None = Query(None, description="Category for insert_prebuilt")
 ):
     """
+    This endpoint is called by the Android application to perform aspecific review action chosen by the user
+
     Handles review actions:
         - get_next
         - discard
