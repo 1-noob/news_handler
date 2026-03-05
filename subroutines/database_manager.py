@@ -75,3 +75,22 @@ class DatabaseManager:
             return document
         except errors.PyMongoError as e:
             raise RuntimeError("Failed to retrieve record from MongoDB") from e
+        
+
+    def paginate_articles(self, limit: int, offset: int):
+        cursor = (
+            self.collection.find({}).sort("_id", 1).skip(offset).limit(limit)
+        )
+
+        articles =[]
+        
+        for doc in cursor:
+            articles.append({
+                "title" : doc.get("Article Title"),
+                "category" : doc.get("Category"),
+                "url" : doc.get("URL"),
+                "status" : doc.get("Status"),
+                "rating" : doc.get("Rating")
+            })
+
+        return articles

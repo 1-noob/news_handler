@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from subroutines.rss_feed_monitor import FeedWatcher
 from subroutines.article_synchronisation import ArticleSyncService
 from subroutines.review_processor import Reviewer
+from subroutines.database_manager import DatabaseManager
 from pathlib import Path
 
 import config as CONFIG
@@ -89,5 +90,29 @@ def review_article(
         }
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/get_articles")
+def get_articles(
+    page: int = Query(1, ge=1),
+    limit: int = Query(60, ge=1, le=100)
+):
+    """Returns a paginated list of articles for the Android App"""
+
+    try:
+        dbMan = DatabaseManager()
+
+        offset = (page-1)*limit
+        articles = dbMan.paginate_articles(limit, offset)
+
+        return {
+            "status" : "success",
+            "page" : page,
+            "limit" : limit,
+            "count" : len(articles),
+            "articles" : articles
+        }
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
