@@ -90,7 +90,7 @@ class FeedWatcher:
             hash_id = HashGenerator.get_hash_str(url)
 
             # Skip if already in discard list
-            if self.discardMan.is_discarded(url) :
+            if self.discardMan.is_discarded(hash_id) :
                 stats["skipped_duplicates"] += 1
                 continue
             
@@ -114,7 +114,7 @@ class FeedWatcher:
             else:
                 # Add only if not already in review data to avoid duplicates
                 hash_id = HashGenerator.get_hash_str(url)
-                if url not in review_data and not self.discardMan.is_discarded(hash_id):
+                if url not in review_data and not self.discardMan.is_discarded(url):
                     review_data[url] = record
                     stats["needs_review"] += 1
 
@@ -122,6 +122,8 @@ class FeedWatcher:
 
         self._write_json(classified_data, self.save_location)
         self._write_json(review_data, self.review_location)
+
+        stats["needs_review"] = len(review_data)
             
         return stats
             
