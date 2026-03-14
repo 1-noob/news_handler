@@ -57,7 +57,6 @@ class FeedWatcher:
         news_feed = feedparser.parse(self.webpage)
 
         classified_data = self._read_json(self.save_location)
-        review_data = self._read_json(self.review_location)
 
         # Remove already classified articles from review data to avoid duplicates
         review_data = {}
@@ -99,6 +98,7 @@ class FeedWatcher:
                 stats["skipped_duplicates"] += 1
                 continue
 
+        
             # Classification
             result = self.classifier.classify(raw_title)
             
@@ -110,18 +110,18 @@ class FeedWatcher:
 
             if result.status == ClassificationStatus.CLASSIFIED and result.category is not None:
                 classified_data[url] = record
-                stats["classified"] += 1
             else:
                 # Add only if not already in review data to avoid duplicates
-                hash_id = HashGenerator.get_hash_str(url)
-                if url not in review_data and not self.discardMan.is_discarded(hash_id):
+                if url not in review_data and not self.discardMan.is_discarded(url):
                     review_data[url] = record
-                    stats["needs_review"] += 1
 
             stats["new_articles"] += 1
 
         self._write_json(classified_data, self.save_location)
         self._write_json(review_data, self.review_location)
+
+        stats["classified"] = len(classified_data)
+        stats["needs_review"] = len(review_data)
             
         return stats
             
