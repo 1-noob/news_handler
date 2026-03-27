@@ -94,3 +94,14 @@ class DatabaseManager:
             })
 
         return articles
+
+    def update_status(self, hash_id:str) -> bool:
+        try:
+            result = self.collection.update_one(
+                {"_id": hash_id},
+                {"$set": {"Status": 1}}
+            )
+
+            return result.matched_count == 1
+        except errors.PyMongoError as e:
+            raise RuntimeError("Failed to update status in DB") from e

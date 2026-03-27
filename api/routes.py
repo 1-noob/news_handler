@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 from subroutines.rss_feed_monitor import FeedWatcher
 from subroutines.article_synchronisation import ArticleSyncService
 from subroutines.review_processor import Reviewer
@@ -116,3 +117,34 @@ def get_articles(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# Request body models
+class RatingUpdate(BaseModel):
+    hash_id: str
+    rating: int
+
+
+@router.put("/update_rating")
+def update_rating(data: RatingUpdate):
+    dbMan = DatabaseManager()
+
+    if data.rating < 1 or data.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 & 5"
+                            )
+    success = dbMan.update_rating(data.hash_id, data.rating)
+    if success:
+        return True
+    raise HTTPException(status_code=404, detail="Article not found")
+
+class StatusUpdate(BaseModel):
+    hash_id: str
+
+
+@router.put("/mark completed")
+def mark_completed(data: StatusUpdate):
+    dbMan = DatabaseManager()
+
+    success = dbMan.update_status(data.hash_id)
+    if success:
+        return True
+    raise HTTPException(status_code=404, detail="Article not found")
